@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global English Learning Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #a855f7 100%);
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .flip-card {
+            perspective: 1000px;
+        }
+        .flip-card-inner {
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .flip-card.flipped .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 1rem;
+        }
+        .flip-card-back {
+            transform: rotateY(180deg);
+        }
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        @keyframes floating {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+            100% { transform: translateY(0px); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans">
+    <!-- Navigation -->
+    <nav class="gradient-bg text-white shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-globe-americas text-2xl"></i>
+                <span class="text-xl font-bold">Global English Learning Hub</span>
+            </div>
+            <div class="hidden md:flex space-x-6">
+                <a href="#" id="nav-home" class="hover:text-purple-200 transition font-medium">Home</a>
+                <a href="#" id="nav-foundational" class="hover:text-purple-200 transition font-medium">Foundational Skills</a>
+                <a href="#" id="nav-professional" class="hover:text-purple-200 transition font-medium">Professional Path</a>
+                <a href="#" id="nav-pricing" class="hover:text-purple-200 transition font-medium">Pricing</a>
+            </div>
+            <button class="md:hidden text-white focus:outline-none" id="menu-toggle">
+                <i class="fas fa-bars text-2xl"></i>
+            </button>
+        </div>
+        <!-- Mobile menu -->
+        <div class="md:hidden hidden bg-purple-800 px-4 py-2" id="mobile-menu">
+            <div class="flex flex-col space-y-3">
+                <a href="#" id="nav-home-mobile" class="hover:text-purple-200 transition py-2 px-4">Home</a>
+                <a href="#" id="nav-foundational-mobile" class="hover:text-purple-200 transition py-2 px-4">Foundational Skills</a>
+                <a href="#" id="nav-professional-mobile" class="hover:text-purple-200 transition py-2 px-4">Professional Path</a>
+                <a href="#" id="nav-pricing-mobile" class="hover:text-purple-200 transition py-2 px-4">Pricing</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main id="main-content" class="container mx-auto px-4 py-12 md:py-16">
+        <!-- Content will be dynamically injected here by JavaScript -->
+    </main>
+
+    <!-- Back to Top Button -->
+    <button id="back-to-top" class="fixed bottom-6 right-6 bg-purple-600 text-white w-12 h-12 rounded-full shadow-lg hover:bg-purple-700 transition hidden z-40">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <script>
+        // DOM Elements
+        const mainContent = document.getElementById('main-content');
+        const mobileMenuToggle = document.getElementById('menu-toggle');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const backToTopButton = document.getElementById('back-to-top');
+
+        // Initial State
+        const appState = {
+            currentPage: 'home',
+            // Hardcoded vocabulary for the flashcard game
+            vocabulary: [
+                { word: 'Hello', image: 'https://placehold.co/150x150/d1d5db/000?text=Hello', translation: 'Hola', context: 'Used as a greeting.' },
+                { word: 'Computer', image: 'https://placehold.co/150x150/d1d5db/000?text=Computer', translation: 'Computadora', context: 'An electronic device for storing and processing data.' },
+                { word: 'Travel', image: 'https://placehold.co/150x150/d1d5db/000?text=Travel', translation: 'Viajar', context: 'To go from one place to another.' },
+                { word: 'Meeting', image: 'https://placehold.co/150x150/d1d5db/000?text=Meeting', translation: 'Reunión', context: 'An assembly of people for a particular purpose.' },
+                { word: 'Financial', image: 'https://placehold.co/150x150/d1d5db/000?text=Financial', translation: 'Financiero', context: 'Relating to finance.' },
+            ],
+            currentCardIndex: 0,
+        };
+
+        // --- Core Rendering Functions ---
+
+        /**
+         * Renders the home page content.
+         */
+        function renderHomePage() {
+            mainContent.innerHTML = `
+                <!-- Hero Section -->
+                <header class="gradient-bg text-white rounded-xl p-8 md:p-16 mb-12 shadow-xl">
+                    <div class="flex flex-col md:flex-row items-center">
+                        <div class="md:w-1/2 mb-10 md:mb-0">
+                            <h1 class="text-3xl md:text-5xl font-bold mb-6">Master English, Master Your Future</h1>
+                            <p class="text-lg md:text-xl mb-8 opacity-90">Your all-in-one platform for foundational and professional English skills.</p>
+                            <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
+                                <button id="start-foundational" class="bg-white text-purple-700 hover:bg-purple-100 font-bold py-3 px-6 rounded-lg transition duration-300 text-center">
+                                    <i class="fas fa-graduation-cap mr-2"></i> Foundational Skills
+                                </button>
+                                <button id="start-professional" class="border-2 border-white text-white hover:bg-white hover:text-purple-700 font-bold py-3 px-6 rounded-lg transition duration-300 text-center">
+                                    <i class="fas fa-briefcase mr-2"></i> Professional Path
+                                </button>
+                            </div>
+                        </div>
+                        <div class="md:w-1/2 flex justify-center">
+                            <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1471&q=80" alt="Learning English" class="rounded-xl shadow-2xl floating w-full max-w-sm">
+                        </div>
+                    </div>
+                </header>
+
+                <!-- Combined Features -->
+                <section class="grid md:grid-cols-2 gap-8 mb-12">
+                    <div class="bg-white p-6 rounded-xl shadow-md">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center"><i class="fas fa-users mr-3 text-purple-600"></i> Foundational Skills</h2>
+                        <p class="text-gray-600 mb-4">Start your journey with essential vocabulary, grammar, and pronunciation. Perfect for beginners and those looking to build confidence in everyday conversations.</p>
+                        <ul class="space-y-2 text-gray-700">
+                            <li class="flex items-center"><i class="fas fa-check-circle text-purple-500 mr-2"></i> Visual Vocabulary (Oxford Picture Dictionary style)</li>
+                            <li class="flex items-center"><i class="fas fa-check-circle text-purple-500 mr-2"></i> Pronunciation Practice</li>
+                            <li class="flex items-center"><i class="fas fa-check-circle text-purple-500 mr-2"></i> Basic Grammar & Sentence Structure</li>
+                        </ul>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-md">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center"><i class="fas fa-robot mr-3 text-purple-600"></i> Professional Path</h2>
+                        <p class="text-gray-600 mb-4">Elevate your English for the workplace with advanced, tech-driven modules. Ideal for career advancement and professional communication.</p>
+                        <ul class="space-y-2 text-gray-700">
+                            <li class="flex items-center"><i class="fas fa-check-circle text-purple-500 mr-2"></i> AI-Powered Writing Assistant (Simulated)</li>
+                            <li class="flex items-center"><i class="fas fa-check-circle text-purple-500 mr-2"></i> Workplace Scenarios & Role-Playing</li>
+                            <li class="flex items-center"><i class="fas fa-check-circle text-purple-500 mr-2"></i> Business Vocabulary & Industry Jargon</li>
+                        </ul>
+                    </div>
+                </section>
+            `;
+            // Add event listeners for the buttons on the home page
+            document.getElementById('start-foundational').addEventListener('click', () => navigateTo('foundational'));
+            document.getElementById('start-professional').addEventListener('click', () => navigateTo('professional'));
+        }
+
+        /**
+         * Renders the foundational learning section with the flashcard game and other content.
+         */
+        function renderFoundationalPage() {
+            mainContent.innerHTML = `
+                <div class="text-center mb-8">
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">Foundational Skills: Vocabulary</h2>
+                    <p class="text-gray-600">Practice with interactive flashcards. Click the card to flip it!</p>
+                </div>
+                <div class="max-w-lg mx-auto bg-white p-6 rounded-xl shadow-lg mb-12">
+                    <div id="flashcard-container" class="relative w-full h-80">
+                        <!-- Flashcard content will be injected here -->
+                    </div>
+                    <div class="flex justify-center space-x-4 mt-6">
+                        <button id="prev-card" class="bg-gray-200 text-gray-800 p-3 rounded-full hover:bg-gray-300 transition-colors disabled:opacity-50"><i class="fas fa-arrow-left"></i></button>
+                        <button id="next-card" class="bg-purple-600 text-white p-3 rounded-full hover:bg-purple-700 transition-colors"><i class="fas fa-arrow-right"></i></button>
+                    </div>
+                    <div class="flex justify-center mt-4">
+                        <button id="speak-word" class="bg-indigo-600 text-white py-2 px-4 rounded-full hover:bg-indigo-700 transition-colors">
+                             <i class="fas fa-volume-up mr-2"></i> Pronounce
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Oxford & Challenges Section from EnglishHub -->
+                <div class="bg-white p-8 rounded-xl shadow-md mb-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Learning with the Oxford Dictionary</h2>
+                    <div class="grid md:grid-cols-2 gap-8 mb-12">
+                        <div>
+                            <div class="bg-gray-50 p-6 rounded-xl shadow-md mb-6">
+                                <div class="flex items-center mb-4">
+                                    <img src="https://images.unsplash.com/photo-1541963463532-d68292c34b19?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" onerror="this.onerror=null; this.src='https://placehold.co/100x100/A855F7/fff?text=OPD';" alt="Oxford Picture Dictionary" class="w-20 h-20 object-cover rounded-lg mr-4">
+                                    <h3 class="text-xl font-bold text-gray-800">Oxford Picture Dictionary</h3>
+                                </div>
+                                <p class="text-gray-700 mb-4">An unparalleled visual resource presenting over 4,000 English words and phrases in meaningful, real-life contexts.</p>
+                                <h4 class="font-bold text-gray-800 mb-2">Thematic Categories:</h4>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div class="bg-purple-50 p-3 rounded-lg"><h5 class="font-bold text-purple-700 text-sm">Everyday Life</h5></div>
+                                    <div class="bg-purple-50 p-3 rounded-lg"><h5 class="font-bold text-purple-700 text-sm">People</h5></div>
+                                    <div class="bg-purple-50 p-3 rounded-lg"><h5 class="font-bold text-purple-700 text-sm">Work</h5></div>
+                                    <div class="bg-purple-50 p-3 rounded-lg"><h5 class="font-bold text-purple-700 text-sm">Leisure</h5></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="bg-gray-50 p-6 rounded-xl shadow-md mb-6">
+                                <div class="flex items-center mb-4">
+                                    <img src="https://images.unsplash.com/photo-1546410531-bb4caa6b424d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" onerror="this.onerror=null; this.src='https://placehold.co/100x100/A855F7/fff?text=Spoken';" alt="Spoken English" class="w-20 h-20 object-cover rounded-lg mr-4">
+                                    <h3 class="text-xl font-bold text-gray-800">Spoken English</h3>
+                                </div>
+                                <p class="text-gray-700 mb-4">Master pronunciation, contractions, and natural speech patterns for fluent communication.</p>
+                                <h4 class="font-bold text-gray-800 mb-2">Key Focus Areas:</h4>
+                                <div class="space-y-3">
+                                    <div class="flex items-center"><div class="w-8 h-8 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mr-3"><i class="fas fa-volume-up"></i></div><span class="text-gray-700">Pronunciation fundamentals</span></div>
+                                    <div class="flex items-center"><div class="w-8 h-8 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mr-3"><i class="fas fa-compress-alt"></i></div><span class="text-gray-700">Mastering contractions</span></div>
+                                    <div class="flex items-center"><div class="w-8 h-8 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mr-3"><i class="fas fa-spell-check"></i></div><span class="text-gray-700">Silent letters and homophones</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NEW SECTION: FOUNDATIONAL SKILLS DEEP DIVE -->
+                <div class="bg-white p-8 rounded-xl shadow-md">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-6">Deep Dive: Foundational Skills</h2>
+                    <p class="text-gray-600 mb-6">Foundational skills are the building blocks for learning and development. Here's a breakdown of the key concepts that form the basis of effective learning.</p>
+
+                    <div class="mb-8">
+                        <h3 class="text-2xl font-bold text-purple-700 mb-4">Philosophical Foundations of Knowledge</h3>
+                        <p class="text-gray-700 mb-2">In epistemology, foundationalism posits that some sources of knowledge are basic and can justify beliefs without relying on other mental states. These include:</p>
+                        <ul class="list-disc list-inside space-y-2 text-gray-700 ml-4">
+                            <li><strong class="font-semibold">Perception:</strong> Using senses to learn about the external world.</li>
+                            <li><strong class="font-semibold">Introspection:</strong> Self-reflection.</li>
+                            <li><strong class="font-semibold">Rational intuition, inference, and testimony.</strong></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mb-8">
+                        <h3 class="text-2xl font-bold text-purple-700 mb-4">Biological and Early Development</h3>
+                        <p class="text-gray-700 mb-2">Learning begins early and has a "disproportional impact" on a person's life. Key concepts include:</p>
+                        <ul class="list-disc list-inside space-y-2 text-gray-700 ml-4">
+                            <li><strong class="font-semibold">Biologically primary knowledge:</strong> Inherent abilities like recognizing faces and speech.</li>
+                            <li><strong class="font-semibold">Memory:</strong> The foundational faculty for language, relationships, and identity.</li>
+                            <li><strong class="font-semibold">Working memory:</strong> The part of memory where active thought processes occur.</li>
+                            <li><strong class="font-semibold">Sleep:</strong> Crucial for memory consolidation.</li>
+                        </ul>
+                    </div>
+
+                    <div class="mb-8">
+                        <h3 class="text-2xl font-bold text-purple-700 mb-4">Language Learning Foundations</h3>
+                        <p class="text-gray-700 mb-2">For English learners, foundational skills focus on practical communication:</p>
+                        <ul class="list-disc list-inside space-y-2 text-gray-700 ml-4">
+                            <li><strong class="font-semibold">Contractions:</strong> Using "I'm," "don't," etc., to sound natural and fluent.</li>
+                            <li><strong class="font-semibold">Pronunciation:</strong> Mastering vowel sounds, silent letters, and stress.</li>
+                            <li><strong class="font-semibold">Sentence Structure:</strong> Understanding basic components like subject-verb-object.</li>
+                            <li><strong class="font-semibold">Phrasal and Prepositional Verbs:</strong> Essential for everyday spoken English.</li>
+                        </ul>
+                    </div>
+
+                    <div class="mb-8">
+                        <h3 class="text-2xl font-bold text-purple-700 mb-4">Digital Literacy Foundations</h3>
+                        <p class="text-gray-700 mb-2">Key digital skills for effective learning in a modern environment:</p>
+                        <ul class="list-disc list-inside space-y-2 text-gray-700 ml-4">
+                            <li>Using apps and tools wisely (e.g., offline mode, voice notes, Google Translate).</li>
+                            <li>Navigating accounts, passwords, and file management.</li>
+                            <li>Joining and participating in online study groups.</li>
+                        </ul>
+                    </div>
+
+                    <div class="mb-8">
+                        <h3 class="text-2xl font-bold text-purple-700 mb-4">Workplace and Personal Effectiveness</h3>
+                        <p class="text-gray-700 mb-2">Beyond language, these skills are crucial for career success:</p>
+                        <ul class="list-disc list-inside space-y-2 text-gray-700 ml-4">
+                            <li><strong class="font-semibold">Hard Skills:</strong> Technical, quantifiable abilities (e.g., programming, driving).</li>
+                            <li><strong class="font-semibold">Soft Skills:</strong> Interpersonal and social skills (e.g., communication, teamwork, emotional intelligence).</li>
+                            <li><strong class="font-semibold">Interview Skills:</strong> Preparation, punctuality, eye contact, and asking questions.</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+            
+            const flashcardContainer = document.getElementById('flashcard-container');
+            const prevButton = document.getElementById('prev-card');
+            const nextButton = document.getElementById('next-card');
+            const speakButton = document.getElementById('speak-word');
+            
+            function renderCard() {
+                const card = appState.vocabulary[appState.currentCardIndex];
+                flashcardContainer.innerHTML = `
+                    <div id="flashcard" class="flip-card w-full h-full cursor-pointer">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front bg-purple-50">
+                                <img src="${card.image}" alt="${card.word}" class="w-32 h-32 md:w-48 md:h-48 rounded-full mb-4 object-cover border-4 border-white shadow">
+                                <h3 class="text-2xl font-bold text-gray-800">${card.word}</h3>
+                            </div>
+                            <div class="flip-card-back bg-white text-center p-6 border-2 border-purple-200">
+                                <h3 class="text-xl md:text-2xl font-bold text-purple-700 mb-2">${card.translation}</h3>
+                                <p class="text-sm md:text-base text-gray-600 mt-2">${card.context}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                const currentCard = document.getElementById('flashcard');
+                currentCard.addEventListener('click', function() {
+                    this.classList.toggle('flipped');
+                });
+                updateButtons();
+            }
+
+            function updateButtons() {
+                prevButton.disabled = appState.currentCardIndex === 0;
+                nextButton.disabled = appState.currentCardIndex === appState.vocabulary.length - 1;
+            }
+
+            prevButton.addEventListener('click', () => {
+                if (appState.currentCardIndex > 0) {
+                    appState.currentCardIndex--;
+                    renderCard();
+                }
+            });
+            nextButton.addEventListener('click', () => {
+                if (appState.currentCardIndex < appState.vocabulary.length - 1) {
+                    appState.currentCardIndex++;
+                    renderCard();
+                }
+            });
+            
+            speakButton.addEventListener('click', () => {
+                const wordToSpeak = appState.vocabulary[appState.currentCardIndex].word;
+                if ('speechSynthesis' in window) {
+                    const utterance = new SpeechSynthesisUtterance(wordToSpeak);
+                    utterance.lang = 'en-US';
+                    window.speechSynthesis.speak(utterance);
+                } else {
+                    alert('Your browser does not support the Web Speech API.');
+                }
+            });
+
+            renderCard();
+        }
+
+        /**
+         * Renders the professional path content with a simulated AI tool and professional curriculum details.
+         */
+        function renderProfessionalPage() {
+            mainContent.innerHTML = `
+                <div class="text-center mb-8">
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">Professional Path: AI Assistant</h2>
+                    <p class="text-gray-600">Practice business English by simulating a conversation with an AI. Write a prompt below.</p>
+                </div>
+                <div class="max-w-xl mx-auto bg-white p-6 rounded-xl shadow-lg mb-12">
+                    <div id="chat-box" class="h-64 overflow-y-auto mb-4 p-4 rounded-lg bg-gray-100 border border-gray-200 space-y-4">
+                        <div class="flex items-start">
+                            <div class="w-8 h-8 rounded-full bg-purple-500 text-white flex items-center justify-center mr-3 flex-shrink-0">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="bg-purple-100 text-purple-800 rounded-xl p-3 max-w-[85%]">
+                                <p>Hello! I am your AI Business English coach. How can I help you today?</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <textarea id="user-input" class="flex-grow p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none" rows="2" placeholder="Write an email, practice a phrase, etc..."></textarea>
+                        <button id="send-btn" class="bg-purple-600 text-white p-3 rounded-full w-12 h-12 flex items-center justify-center hover:bg-purple-700 transition-colors">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Professional Curriculum Table from ProEnglish 2025 -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden p-8 mb-12">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Professional Curriculum</h2>
+                    <div class="grid md:grid-cols-7 bg-indigo-600 text-white font-semibold rounded-t-lg">
+                        <div class="p-4">Module</div>
+                        <div class="p-4">Skills</div>
+                        <div class="p-4">Methods</div>
+                        <div class="p-4">Duration</div>
+                        <div class="p-4">Level</div>
+                        <div class="p-4">Tools</div>
+                        <div class="p-4">Outcome</div>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-7 border-b border-gray-200 hover:bg-gray-50">
+                        <div class="p-4 font-medium">Professional Emails</div>
+                        <div class="p-4 text-sm text-gray-600">Business writing, tone, clarity</div>
+                        <div class="p-4 text-sm text-gray-600">Microlearning, AI feedback</div>
+                        <div class="p-4 text-sm text-gray-600">2 weeks</div>
+                        <div class="p-4"><span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">All levels</span></div>
+                        <div class="p-4 text-sm text-gray-600">Grammarly, ChatGPT</div>
+                        <div class="p-4 text-sm text-gray-600">Confident business correspondence</div>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-7 border-b border-gray-200 hover:bg-gray-50">
+                        <div class="p-4 font-medium">Meetings & Presentations</div>
+                        <div class="p-4 text-sm text-gray-600">Speaking, persuasion, data presentation</div>
+                        <div class="p-4 text-sm text-gray-600">VR simulations, role-plays</div>
+                        <div class="p-4 text-sm text-gray-600">3 weeks</div>
+                        <div class="p-4"><span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">Intermediate+</span></div>
+                        <div class="p-4 text-sm text-gray-600">Zoom, PowerPoint</div>
+                        <div class="p-4 text-sm text-gray-600">Effective meeting leadership</div>
+                    </div>
+                </div>
+
+                <!-- NEW SECTION: PROFESSIONAL PATH DEEP DIVE -->
+                <div class="bg-white p-8 rounded-xl shadow-md">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-6">Deep Dive: The Professional Path</h2>
+                    <p class="text-gray-600 mb-6">A professional path involves continuously acquiring and applying diverse skills to achieve career goals. It's a journey of lifelong learning and development.</p>
+
+                    <div class="mb-8">
+                        <h3 class="text-2xl font-bold text-purple-700 mb-4">Core Competencies for the Modern Economy</h3>
+                        <p class="text-gray-700 mb-2">Success in the modern workplace requires a combination of technical and interpersonal abilities, often categorized as hard and soft skills.</p>
+                        <div class="grid md:grid-cols-2 gap-6 mt-4">
+                            <div>
+                                <h4 class="font-bold text-gray-800 mb-2"><i class="fas fa-hammer text-purple-600 mr-2"></i> Hard Skills</h4>
+                                <p class="text-gray-600 mb-2">Quantifiable, task-specific abilities. These can be learned through formal training and are essential for performing specific job functions.</p>
+                                <ul class="list-disc list-inside text-gray-600 ml-4 space-y-1">
+                                    <li>Programming, data entry, typing</li>
+                                    <li>Financial analysis, marketing, sales</li>
+                                    <li>Technical repair and troubleshooting</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 mb-2"><i class="fas fa-handshake text-purple-600 mr-2"></i> Soft Skills</h4>
+                                <p class="text-gray-600 mb-2">Interpersonal skills and personal attributes that enable effective interaction with others. These are crucial for career growth and teamwork.</p>
+                                <ul class="list-disc list-inside text-gray-600 ml-4 space-y-1">
+                                    <li>Problem-solving and critical thinking</li>
+                                    <li>Clear communication and teamwork</li>
+                                    <li>Time management and emotional intelligence</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-8">
+                        <h3 class="text-2xl font-bold text-purple-700 mb-4">Career Planning & Job Search</h3>
+                        <p class="text-gray-700 mb-2">Navigating your career involves strategic planning and preparation. Our platform guides you through each stage:</p>
+                        <ul class="list-disc list-inside space-y-2 text-gray-700 ml-4">
+                            <li><strong class="font-semibold">Preparation:</strong> Building a resume, writing cover letters, and networking.</li>
+                            <li><strong class="font-semibold">Application:</strong> Finding job openings and meticulously completing applications.</li>
+                            <li><strong class="font-semibold">Interviewing:</strong> Practicing key skills like preparation, punctuality, and making eye contact to demonstrate confidence.</li>
+                        </ul>
+                    </div>
+
+                    <div class="mb-8">
+                        <h3 class="text-2xl font-bold text-purple-700 mb-4">Workplace Effectiveness</h3>
+                        <p class="text-gray-700 mb-2">Once employed, a focus on continuous improvement and effective communication is key to success.</p>
+                        <ul class="list-disc list-inside space-y-2 text-gray-700 ml-4">
+                            <li><strong class="font-semibold">Communication:</strong> Clarifying instructions and professionally responding to feedback.</li>
+                            <li><strong class="font-semibold">Teamwork:</strong> Cooperating effectively within an organization's structure.</li>
+                            <li><strong class="font-semibold">Professional Development:</strong> Pursuing continuous learning through on-the-job training, courses, and certifications.</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+
+            const chatBox = document.getElementById('chat-box');
+            const userInput = document.getElementById('user-input');
+            const sendBtn = document.getElementById('send-btn');
+            
+            function addMessage(text, isUser = false) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `flex ${isUser ? 'justify-end' : 'items-start'}`;
+                
+                const messageBubble = document.createElement('div');
+                messageBubble.className = `p-3 rounded-xl max-w-[85%]`;
+
+                if (isUser) {
+                    messageBubble.classList.add('bg-blue-600', 'text-white');
+                    messageBubble.textContent = text;
+                    messageDiv.appendChild(messageBubble);
+                } else {
+                    const iconDiv = document.createElement('div');
+                    iconDiv.className = 'w-8 h-8 rounded-full bg-purple-500 text-white flex items-center justify-center mr-3 flex-shrink-0';
+                    iconDiv.innerHTML = '<i class="fas fa-robot"></i>';
+                    
+                    messageBubble.classList.add('bg-purple-100', 'text-purple-800');
+                    messageBubble.textContent = text;
+                    
+                    messageDiv.appendChild(iconDiv);
+                    messageDiv.appendChild(messageBubble);
+                }
+                
+                chatBox.appendChild(messageDiv);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+
+            function simulateResponse(prompt) {
+                const lowerPrompt = prompt.toLowerCase();
+                let response = '';
+
+                if (lowerPrompt.includes('email') || lowerPrompt.includes('write')) {
+                    response = 'To write a professional email, always start with a clear subject line and a formal greeting like "Dear [Name]". State your purpose clearly in the first paragraph, and close with a professional sign-off.';
+                } else if (lowerPrompt.includes('meeting') || lowerPrompt.includes('presentation')) {
+                    response = 'For a successful meeting, use phrases like "Let\'s get started," and "I have a few points to cover." Maintain eye contact and speak clearly. To present data, use transitions like "As you can see from the chart..."';
+                } else if (lowerPrompt.includes('vocabulary') || lowerPrompt.includes('word')) {
+                    response = 'To expand your vocabulary, use new words in sentences right after you learn them. Try using words like "synergy," "proactive," or "leverage."';
+                } else {
+                    response = "That's a great question! For professional communication, focus on clarity, conciseness, and confidence. Keep practicing and you'll improve quickly!";
+                }
+
+                setTimeout(() => {
+                    addMessage(response, false);
+                    sendBtn.disabled = false;
+                    userInput.disabled = false;
+                }, 1000);
+            }
+
+            sendBtn.addEventListener('click', () => {
+                const prompt = userInput.value.trim();
+                if (prompt) {
+                    addMessage(prompt, true);
+                    userInput.value = '';
+                    sendBtn.disabled = true;
+                    userInput.disabled = true;
+                    simulateResponse(prompt);
+                }
+            });
+
+            userInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendBtn.click();
+                }
+            });
+        }
+
+        /**
+         * Renders the pricing page with plans and corporate packages.
+         */
+        function renderPricingPage() {
+            mainContent.innerHTML = `
+                <div class="text-center mb-8">
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">Flexible Pricing Plans</h2>
+                    <p class="text-gray-600">Choose the option that fits your professional goals and schedule</p>
+                </div>
+                
+                <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto mb-12">
+                    <div class="bg-white p-8 rounded-xl border border-gray-200 shadow-sm hover:border-indigo-300 transition duration-300">
+                        <h3 class="text-xl font-bold mb-2">Starter</h3>
+                        <p class="text-gray-600 mb-6">For professionals building foundational skills</p>
+                        <div class="mb-6">
+                            <span class="text-4xl font-bold">$49</span>
+                            <span class="text-gray-500">/month</span>
+                        </div>
+                        <ul class="space-y-3 mb-8">
+                            <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i><span>Access to core modules</span></li>
+                            <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i><span>AI-powered exercises</span></li>
+                            <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i><span>Monthly coach session</span></li>
+                            <li class="flex items-center text-gray-400"><i class="fas fa-times text-gray-300 mr-2"></i><span>No VR simulations</span></li>
+                            <li class="flex items-center text-gray-400"><i class="fas fa-times text-gray-300 mr-2"></i><span>Limited industry content</span></li>
+                        </ul>
+                        <button class="w-full bg-gray-100 text-gray-800 py-3 rounded-md font-medium hover:bg-gray-200 transition duration-300">Get Started</button>
+                    </div>
+                    
+                    <div class="bg-white p-8 rounded-xl border-2 border-indigo-500 shadow-lg relative">
+                        <div class="absolute top-0 right-0 bg-indigo-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg rounded-tr-lg">MOST POPULAR</div>
+                        <h3 class="text-xl font-bold mb-2">Professional</h3>
+                        <p class="text-gray-600 mb-6">For career-focused language development</p>
+                        <div class="mb-6">
+                            <span class="text-4xl font-bold">$99</span>
+                            <span class="text-gray-500">/month</span>
+                        </div>
+                        <ul class="space-y-3 mb-8">
+                            <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i><span>All core + industry modules</span></li>
+                            <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i><span>Weekly live coaching</span></li>
+                            <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i><span>VR meeting simulations</span></li>
+                            <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i><span>AI writing assistant</span></li>
+                            <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i><span>Progress certification</span></li>
+                        </ul>
+                        <button class="w-full bg-indigo-600 text-white py-3 rounded-md font-medium hover:bg-indigo-700 transition duration-300">Choose Plan</button>
+                    </div>
+                    
+                    <div class="bg-white p-8 rounded-xl border border-gray-200 shadow-sm hover:border-indigo-300 transition duration-300">
+                        <h3 class="text-xl font-bold mb-2">Enterprise</h3>
+                        <p class="text-gray-600 mb-6">For teams and organizations</p>
+                        <div class="mb-6"><span class="text-4xl font-bold">Custom</span></div>
+                        <ul class="space-y-3 mb-8">
+                            <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i><span>Everything in Professional</span></li>
+                            <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i><span>Dedicated account manager</span></li>
+                            <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i><span>Team progress analytics</span></li>
+                            <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i><span>Custom content development</span></li>
+                            <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i><span>On-site training options</span></li>
+                        </ul>
+                        <button class="w-full bg-gray-100 text-gray-800 py-3 rounded-md font-medium hover:bg-gray-200 transition duration-300">Contact Sales</button>
+                    </div>
+                </div>
+                
+                <div class="mt-12 bg-indigo-50 border border-indigo-100 rounded-lg p-6 max-w-3xl mx-auto">
+                    <div class="flex items-start">
+                        <div class="bg-indigo-100 p-3 rounded-full mr-4"><i class="fas fa-graduation-cap text-indigo-600"></i></div>
+                        <div>
+                            <h4 class="font-bold text-lg mb-2">Corporate Training Packages</h4>
+                            <p class="text-gray-700">We offer customized solutions for organizations looking to upskill their workforce. Volume discounts, dedicated coaching, and tailored content available.</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- Navigation Logic ---
+        function navigateTo(pageName) {
+            appState.currentPage = pageName;
+            
+            if (!mobileMenu.classList.contains('hidden')) {
+                mobileMenu.classList.add('hidden');
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            switch (appState.currentPage) {
+                case 'home':
+                    renderHomePage();
+                    break;
+                case 'foundational':
+                    appState.currentCardIndex = 0;
+                    renderFoundationalPage();
+                    break;
+                case 'professional':
+                    renderProfessionalPage();
+                    break;
+                case 'pricing':
+                    renderPricingPage();
+                    break;
+                default:
+                    renderHomePage();
+            }
+        }
+
+        // --- Event Listeners and Initial Setup ---
+        mobileMenuToggle.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+        document.getElementById('nav-home').addEventListener('click', (e) => { e.preventDefault(); navigateTo('home'); });
+        document.getElementById('nav-foundational').addEventListener('click', (e) => { e.preventDefault(); navigateTo('foundational'); });
+        document.getElementById('nav-professional').addEventListener('click', (e) => { e.preventDefault(); navigateTo('professional'); });
+        document.getElementById('nav-pricing').addEventListener('click', (e) => { e.preventDefault(); navigateTo('pricing'); });
+        document.getElementById('nav-home-mobile').addEventListener('click', (e) => { e.preventDefault(); navigateTo('home'); });
+        document.getElementById('nav-foundational-mobile').addEventListener('click', (e) => { e.preventDefault(); navigateTo('foundational'); });
+        document.getElementById('nav-professional-mobile').addEventListener('click', (e) => { e.preventDefault(); navigateTo('professional'); });
+        document.getElementById('nav-pricing-mobile').addEventListener('click', (e) => { e.preventDefault(); navigateTo('pricing'); });
+
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 300) {
+                backToTopButton.classList.remove('hidden');
+            } else {
+                backToTopButton.classList.add('hidden');
+            }
+        });
+        
+        backToTopButton.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            navigateTo('home');
+        });
+    </script>
+</body>
+</html>
