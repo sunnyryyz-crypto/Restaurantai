@@ -20,8 +20,9 @@ def create_app():
     bcrypt.init_app(app)
 
     with app.app_context():
-        from .routes import auth
+        from .routes import auth, qbank
         app.register_blueprint(auth.bp, url_prefix='/auth')
+        app.register_blueprint(qbank.bp, url_prefix='/qbank')
         db.create_all()
 
     return app
